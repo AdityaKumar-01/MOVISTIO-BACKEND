@@ -1,19 +1,20 @@
 from flask import Flask, render_template,request 
 import pandas as pd
-from flask_cors import CORS
+import numpy as np
+from flask_cors import CORS, cross_origin
 import math
 import re
 from collections import Counter
+import pickle
+
+filename = 'nlp_model.pkl'
+clf = pickle.load(open(filename, 'rb'))
+vectorizer = pickle.load(open('tranform.pkl','rb'))
 
 app = Flask(__name__)
-CORS(app)
-cors = CORS(app,resources = {
-    r"/*":{
-        "origins":"*"
-    }
-})
 
-
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 WORD = re.compile(r"\w+")
 
 def get_cosine(vec1, vec2):
@@ -43,109 +44,41 @@ def displayHome():
     }
     return x
 
-@app.route('/getRecommendations', methods=["GET"])
+@app.route('/getRecommendations', methods=["POST"])
 def displayRecommendations():
-    title= request.args.get('title')
-    title = title.lower()
-    df = pd.read_csv("../Dataset/reqAttr.csv")
-
-    corr = []
-    vector1 = text_to_vector(title)
-    for ind, row in df.iterrows():
-        vector2 = text_to_vector(row["combined"].lower())
-        cosine = get_cosine(vector1, vector2)
-        corr.append((row["movie_title"],cosine))
-    print(len(corr))
-    corr = sorted(corr,key=lambda x: x[1], reverse=True)
+    title= request.get_json()
+    # print(title["cast"])
+    # title = title.lower()
+    # df = pd.read_csv("../Dataset/reqAttr.csv")
+    # print(title)
+    # corr = []
+    # vector1 = text_to_vector(title)
+    # for ind, row in df.iterrows():
+    #     vector2 = text_to_vector(row["combined"].lower())
+    #     cosine = get_cosine(vector1, vector2)
+    #     corr.append((row["movie_title"],cosine))
+    # print(corr)
+    # corr = sorted(corr,key=lambda x: x[1], reverse=True)
+    # print(corr[0])
     res = {
-        "data":corr[0:11],
+        "data":"aditya",
         "status":200
     }
     return res
 
-
+@app.route("/filterReviews", methods=["POST"])
+def filterReviews():
+    reviews_status=[]
+    data= request.get_json()
+    movie_review_list = np.array(data)
+    movie_vector = vectorizer.transform(movie_review_list)
+    pred = clf.predict(movie_vector)
+    for i in range(pred):
+        reviews_status.append((data[i], pred[i]))
+    res = {
+        "staus":200,
+        "data":reviews_status
+    }
+    return res
 if __name__ == '__main__':
     app.run(debug=True,port=5000)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-# def getMovieNames(name):
-#     data = pd.read_csv("Dataset/reqAttr.csv")
-#     for i in range(len(data)):
-#         if name == data["movie_title"][i]:
-#             cntVec = CountVectorizer()
-#             cntMat = cntVec.fit_transform(data['combined'])
-#             similarity = cosine_similarity(cntMat)
-#             i = data.loc[data['movie_title']==name].index[0]
-#             lst = list(enumerate(similarity[i]))
-#             lst = sorted(lst, key = lambda x:x[1] ,reverse=True)
-#             lst = lst[1:21] # excluding first item since it is the requested movie itself
-#             l = []
-#             for i in range(len(lst)):
-#                 a = lst[i][0]
-#                 l.append(data['movie_title'][a])
-#             l=list(set(l))
-#             if name in l:
-#                 l.remove(name)
-#             l = l[0:10]
-#             s = "---".join(l)
-#             return s
-#     return "404"
-
-# @app.route('/',methods=["GET"])
-# def displayHome():
-#     x = {
-#         "name":"Aditya",
-#         "reg":"19BIT0139"
-#     }
-#     return x
-
-# @app.route('/rcmdByTitle', methods=["POST"])
-# def genre():
-#     title= request.form['title']
-#     listMovies = getMovieNames(title)
-#     return listMovies
-
-
