@@ -6,6 +6,7 @@ import math
 import re
 from collections import Counter
 import pickle
+import json
 
 filename = 'nlp_model.pkl'
 clf = pickle.load(open(filename, 'rb'))
@@ -46,22 +47,31 @@ def displayHome():
 
 @app.route('/getRecommendations', methods=["POST"])
 def displayRecommendations():
-    title= request.get_json()
-    # print(title["cast"])
-    # title = title.lower()
-    # df = pd.read_csv("../Dataset/reqAttr.csv")
-    # print(title)
-    # corr = []
-    # vector1 = text_to_vector(title)
-    # for ind, row in df.iterrows():
-    #     vector2 = text_to_vector(row["combined"].lower())
-    #     cosine = get_cosine(vector1, vector2)
-    #     corr.append((row["movie_title"],cosine))
+    data= request.get_json()
+    inp = ""
+    for i in data["movie"]:
+        inp+= i["name"]+" "
+        
+    inp+=data["cast"][0]["original_name"]+ " "
+    inp+=data["cast"][1]["original_name"]+ " "
+    inp+=data["cast"][2]["original_name"]+ " "
+    print(inp)
+    
+    print(data.keys())
+    inp = inp.lower()
+    df = pd.read_csv("../Dataset/reqAttr.csv")
+    print(inp)
+    corr = []
+    vector1 = text_to_vector(inp)
+    for ind, row in df.iterrows():
+        vector2 = text_to_vector(row["combined"].lower())
+        cosine = get_cosine(vector1, vector2)
+        corr.append((row["movie_title"],cosine))
     # print(corr)
-    # corr = sorted(corr,key=lambda x: x[1], reverse=True)
-    # print(corr[0])
+    corr = sorted(corr,key=lambda x: x[1], reverse=True)
+    print(corr[0],corr[1],corr[2])
     res = {
-        "data":"aditya",
+        "data":corr[:10],
         "status":200
     }
     return res
