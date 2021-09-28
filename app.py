@@ -55,12 +55,10 @@ def displayRecommendations():
     inp+=data["cast"][0]["original_name"]+ " "
     inp+=data["cast"][1]["original_name"]+ " "
     inp+=data["cast"][2]["original_name"]+ " "
-    print(inp)
     
-    print(data.keys())
     inp = inp.lower()
     df = pd.read_csv("../Dataset/reqAttr.csv")
-    print(inp)
+   
     corr = []
     vector1 = text_to_vector(inp)
     for ind, row in df.iterrows():
@@ -69,9 +67,9 @@ def displayRecommendations():
         corr.append((row["movie_title"],cosine))
     # print(corr)
     corr = sorted(corr,key=lambda x: x[1], reverse=True)
-    print(corr[0],corr[1],corr[2])
+
     res = {
-        "data":corr[:10],
+        "data":corr[1:7],
         "status":200
     }
     return res
