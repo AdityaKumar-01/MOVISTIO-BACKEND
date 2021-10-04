@@ -91,7 +91,7 @@ def filterReviews():
             movie_review_list = np.array([reviews.string])
             movie_vector = vectorizer.transform(movie_review_list)
             pred = clf.predict(movie_vector)
-            reviews_status.append('Good' if pred else 'Bad')
+            reviews_status.append('Positive' if pred else 'Negative')
 
     # combining reviews and comments into a dictionary
     movie_reviews = []
