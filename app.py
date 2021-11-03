@@ -1,4 +1,4 @@
-from flask import Flask, render_template,request 
+from flask import Flask,request
 import pandas as pd
 import numpy as np
 from flask_cors import CORS, cross_origin
@@ -9,7 +9,7 @@ import pickle
 import json
 import bs4 as bs
 import urllib.request
-
+import os
 filename = 'nlp_model.pkl'
 clf = pickle.load(open(filename, 'rb'))
 vectorizer = pickle.load(open('tranform.pkl','rb'))
@@ -27,18 +27,18 @@ def get_cosine(vec1, vec2):
     sum1 = sum([vec1[x] ** 2 for x in list(vec1.keys())])
     sum2 = sum([vec2[x] ** 2 for x in list(vec2.keys())])
     denominator = math.sqrt(sum1) * math.sqrt(sum2)
-    
+
     if not denominator:
         return 0.0
     else:
         return float(numerator) / denominator
-    
+
 def text_to_vector(text):
     words = WORD.findall(text)
     return Counter(words)
 
 
-    
+
 @app.route('/',methods=["GET"])
 def displayHome():
     x = {
@@ -53,14 +53,14 @@ def displayRecommendations():
     inp = ""
     for i in data["movie"]:
         inp+= i+" "
-        
+
     inp+=data["cast"][0]["original_name"]+ " "
     inp+=data["cast"][1]["original_name"]+ " "
     inp+=data["cast"][2]["original_name"]+ " "
-    
+
     inp = inp.lower()
     df = pd.read_csv("reqAttr.csv")
-   
+
     corr = []
     vector1 = text_to_vector(inp)
     for ind, row in df.iterrows():
@@ -96,13 +96,14 @@ def filterReviews():
     # combining reviews and comments into a dictionary
     movie_reviews = []
     for i in range(len(reviews_status)):
-        movie_reviews.append((reviews_list[i], reviews_status[i]))     
-   
+        movie_reviews.append((reviews_list[i], reviews_status[i]))
+
     res = {
         "staus":200,
         "data":movie_reviews
     }
-   
+
     return res
 if __name__ == '__main__':
-    app.run(debug=True,port=5000)
+    port = int(os.environ.get('PORT', 33507))
+    app.run(debug=True,port=port)
