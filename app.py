@@ -59,7 +59,7 @@ def displayRecommendations():
     inp+=data["cast"][2]["original_name"]+ " "
     
     inp = inp.lower()
-    df = pd.read_csv("../Dataset/reqAttr.csv")
+    df = pd.read_csv("reqAttr.csv")
    
     corr = []
     vector1 = text_to_vector(inp)
