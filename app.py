@@ -5,14 +5,15 @@ from flask_cors import CORS, cross_origin
 import math
 import re
 from collections import Counter
-import pickle
+import joblib
 import json
 import bs4 as bs
 import urllib.request
 import os
-filename = 'nlp_model.pkl'
-clf = pickle.load(open(filename, 'rb'))
-vectorizer = pickle.load(open('tranform.pkl','rb'))
+from waitress import serve
+filename = 'nlp_model'
+clf = joblib.load(open(filename, 'rb'))
+vectorizer = joblib.load(open('tranform','rb'))
 
 app = Flask(__name__)
 
@@ -39,13 +40,12 @@ def text_to_vector(text):
 
 
 
-@app.route('/',methods=["GET"])
-def displayHome():
-    x = {
-        "name":"Aditya",
-        "reg":"19BIT0139"
-    }
-    return x
+
+@app.route('/', methods=["GET"])
+def starting_url():
+    
+    return {"status":200,"msg":"ok"}
+
 
 @app.route('/getRecommendations', methods=["POST"])
 def displayRecommendations():
@@ -76,6 +76,7 @@ def displayRecommendations():
     }
     return res
 
+
 @app.route("/filterReviews", methods=["POST"])
 def filterReviews():
     data= request.get_json()
@@ -87,6 +88,7 @@ def filterReviews():
     for reviews in soup_result:
         if reviews.string:
             reviews_list.append(reviews.string)
+            print(reviews.string)
             # passing the review to our model
             movie_review_list = np.array([reviews.string])
             movie_vector = vectorizer.transform(movie_review_list)
@@ -105,5 +107,7 @@ def filterReviews():
 
     return res
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False,host="0.0.0.0", port=port)
+   
+    app.debug=True
+    port = int(os.environ.get("PORT", 33507))
+    serve(app,port=port)
