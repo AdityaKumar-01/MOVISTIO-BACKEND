@@ -1,3 +1,4 @@
+from logging import debug
 from flask import Flask,request
 import pandas as pd
 import numpy as np
@@ -80,26 +81,22 @@ def displayRecommendations():
 @app.route("/filterReviews", methods=["POST"])
 def filterReviews():
     data= request.get_json()
-    sauce = urllib.request.urlopen('https://www.imdb.com/title/{}/reviews?ref_=tt_ov_rt'.format(data["id"])).read()
-    soup = bs.BeautifulSoup(sauce,'lxml')
-    soup_result = soup.find_all("div",{"class":"text show-more__control"})
+    print(data)
+    reviews = data
     reviews_list = [] # list of reviews
     reviews_status = [] # list of comments (good or bad)
-    for reviews in soup_result:
-        if reviews.string:
-            reviews_list.append(reviews.string)
-            print(reviews.string)
-            # passing the review to our model
-            movie_review_list = np.array([reviews.string])
-            movie_vector = vectorizer.transform(movie_review_list)
-            pred = clf.predict(movie_vector)
-            reviews_status.append('Positive' if pred else 'Negative')
+    for review in data:
+        reviews_list.append(review)
+        # passing the review to our model
+        movie_review_list = np.array([review])
+        movie_vector = vectorizer.transform(movie_review_list)
+        pred = clf.predict(movie_vector)
+        reviews_status.append('Positive' if pred else 'Negative')
 
-    # combining reviews and comments into a dictionary
     movie_reviews = []
     for i in range(len(reviews_status)):
         movie_reviews.append((reviews_list[i], reviews_status[i]))
-
+    print(reviews_status)
     res = {
         "staus":200,
         "data":movie_reviews
@@ -111,3 +108,4 @@ if __name__ == '__main__':
     app.debug=True
     port = int(os.environ.get("PORT", 33507))
     serve(app,port=port)
+    # app.run(debug=True, port=33507)
